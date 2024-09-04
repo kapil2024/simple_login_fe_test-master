@@ -24,7 +24,7 @@
               type="email"
               placeholder="Email Address"
               
-              v-model="loginEmail"
+              v-model="signInForm.email"
               @input="clearLoginEmailError"
             />
           </div>
@@ -34,7 +34,7 @@
               :type="showLoginPassword ? 'text' : 'password'"
               placeholder="Password"
               
-              v-model="loginPassword"
+              v-model="signInForm.password"
               @input="clearLoginPasswordError"
             />
             <span class="toggle-password" @click="toggleLoginPassword">
@@ -78,7 +78,7 @@
             <input
               type="text"
               placeholder="Username"
-              v-model="userName"
+              v-model="signUpForm.username"
               @input="clearUserNameError"
             />
           </div>
@@ -87,8 +87,7 @@
             <input
               type="email"
               placeholder="Email Address"
-              
-              v-model="signupEmail"
+              v-model="signUpForm.email"
               @input="clearSignupEmailError"
             />
           
@@ -98,8 +97,7 @@
             <input
               :type="showSignupPassword ? 'text' : 'password'"
               placeholder="Password"
-              
-              v-model="signupPassword"
+              v-model="signUpForm.password"
               @input="clearSignupPasswordError"
             />
            
@@ -147,12 +145,16 @@ import axios from "axios";
 export default {
   data() {
     return {
+      signUpForm:{
+        username:"",
+        email:"",
+        password:""
+      },
+      signInForm:{
+        email:"",
+        password:""
+      },
       activeForm: "login",
-      loginEmail: "",
-      loginPassword: "",
-      signupEmail: "",
-      signupPassword: "",
-      userName: "",
       showLoginPassword: false,
       showSignupPassword: false,
         loginEmailError: '',
@@ -208,15 +210,15 @@ export default {
     async handleLogin() {
         this.resetErrors();
       
-      if (!this.loginEmail) {
+      if (!this.signInForm.email) {
         this.loginEmailError = 'Email is required';
-      } else if (!this.isValidEmail(this.loginEmail)) {
+      } else if (!this.isValidEmail(this.signInForm.email)) {
         this.loginEmailError = 'Invalid email address';
       }
 
-      if (!this.loginPassword) {
+      if (!this.signInForm.password) {
         this.loginPasswordError = 'Password is required';
-      } else if (this.loginPassword.length < 6) {
+      } else if (this.signInForm.password.length < 6) {
         this.loginPasswordError = 'Password must be at least 6 characters long';
       }
 
@@ -225,10 +227,10 @@ export default {
         const response = await axios.post(
             `${this.api_url}auth/sign-in`,
           {
-            email: this.loginEmail,
-            password: this.loginPassword,
+            ...this.signInForm
           }
         );
+        localStorage.setItem('authToken',response.data.token);
         this.$router.push('/dashboard')
       } catch (error) {
           this.loginPasswordError = 'Email or password is invalid';
@@ -238,18 +240,18 @@ export default {
     },
     async handleSignup() {
       this.resetErrors();
-       if (!this.userName) {
+       if (!this.signUpForm.username) {
         this.userNameError = 'Username is required';
       }
-      if (!this.signupEmail) {
+      if (!this.signUpForm.email) {
         this.signupEmailError = 'Email is required';
-      } else if (!this.isValidEmail(this.signupEmail)) {
+      } else if (!this.isValidEmail(this.signUpForm.email)) {
         this.signupEmailError = 'Invalid email address';
       }
 
-      if (!this.signupPassword) {
+      if (!this.signUpForm.password) {
         this.signupPasswordError = 'Password is required';
-      } else if (this.signupPassword.length < 6) {
+      } else if (this.signUpForm.password.length < 6) {
         this.signupPasswordError = 'Password must be at least 6 characters long';
       }
 
@@ -258,11 +260,10 @@ export default {
         const response = await axios.post(
             `${this.api_url}auth/sign-up`,
           {
-            username: this.userName,
-            email: this.signupEmail,
-            password: this.signupPassword,
+            ...this.signUpForm
           }
         );
+        localStorage.setItem('authToken',response.data.token);
         this.$router.push('/dashboard')
       } catch (error) {
         console.error("Signup failed:", error.response.data);
