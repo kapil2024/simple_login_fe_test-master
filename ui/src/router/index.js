@@ -12,17 +12,35 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/DashboardPage.vue')
+      component: () => import('../views/DashboardPage.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path:'/setting',
       name:'account-setting',
-      component: ()=> import('../views/AccountSetting.vue')
+      component: ()=> import('../views/AccountSetting.vue'),
+      meta: { requiresAuth: true }
     }
   ]
+})
+
+const isAuthenticated = () => {
+  return !!localStorage.getItem('authToken');
+}
+
+// Global navigation guard
+router.beforeEach((to, from, next) => {
+  const isAuth = isAuthenticated() // Replace with your actual authentication check
+
+  if (to.meta.requiresAuth && !isAuth) {
+    // Redirect to login if the route requires auth and user is not authenticated
+    next('/')
+  } else if (!to.meta.requiresAuth && isAuth && to.path === '/') {
+    // Redirect to dashboard if already authenticated and trying to access the login page
+    next('/dashboard')
+  } else {
+    next()
+  }
 })
 
 export default router
